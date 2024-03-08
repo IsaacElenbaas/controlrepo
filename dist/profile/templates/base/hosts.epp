@@ -1,0 +1,6 @@
+::1 localhost
+127.0.0.1 localhost
+<% lookup("nodes").each |$name, $address| { -%>
+<% if $name == $hostname { %>127.0.0.1 <%= $name %><% } else { %><%= $address %><%= $name %><% } %>
+<% } -%>
+<%= lookup("primary_server_ip") %> mfsmaster

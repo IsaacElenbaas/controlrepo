@@ -1,0 +1,45 @@
+// vim:set ts=4 sw=4 et:
+
+options {
+    directory "/var/named";
+    pid-file "/run/named/named.pid";
+
+    port 8093;
+    listen-on port 8093 { 127.0.0.1; };
+    forward only;
+    dnssec-validation no;
+    forwarders { 127.0.0.1 port 5300; };
+    //forwarders { 1.1.1.1 port 53; 1.1.0.0 port 53; };
+
+    allow-recursion { 127.0.0.1; };
+    allow-transfer { none; };
+    allow-update { none; };
+    version none;
+    hostname none;
+    server-id none;
+};
+
+zone "localhost" IN {
+    type master;
+    file "localhost.zone";
+};
+
+zone "0.0.127.in-addr.arpa" IN {
+    type master;
+    file "127.0.0.zone";
+};
+
+zone "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa" {
+    type master;
+    file "localhost.ip6.zone";
+};
+
+zone "tailscale.com" IN {
+    type forward;
+    forwarders { 1.1.1.1 port 53; 1.1.0.0 port 53; };
+};
+
+zone "cloudflare.com" IN {
+    type forward;
+    forwarders { 1.1.1.1 port 53; 1.1.0.0 port 53; };
+};

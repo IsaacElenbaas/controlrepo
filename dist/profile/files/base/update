@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ -f /etc/pacman.d/mirrorlist.base ]; then
+	sudo cp -f /etc/pacman.d/mirrorlist.base /etc/pacman.d/mirrorlist
+else
+	sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.base
+fi
+sudo pacman --noconfirm -Sy --needed archlinux-keyring
+if command -v yay &>/dev/null; then
+	yay --sudoloop --norebuild -Syu
+else
+	sudo pacman -Syu
+fi
+date +'Server=https://archive.archlinux.org/repos/%Y/%m/%d/$repo/os/$arch' | sudo tee /etc/pacman.d/mirrorlist > /dev/null

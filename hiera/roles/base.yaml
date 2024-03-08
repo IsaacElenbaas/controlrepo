@@ -1,0 +1,5 @@
+---
+primary_server_ip: "100.111.227.84"
+named_conf: "base/named.conf"
+nodes:
+  IsaacArch-Ryzen: "100.111.227.84"

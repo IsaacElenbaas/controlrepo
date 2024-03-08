@@ -1,0 +1,8 @@
+#!/bin/bash
+
+r10k puppetfile install
+FACTER_environmentpath="$PWD" sudo --preserve-env=FACTER_environmentpath puppet apply \
+--environmentpath "$PWD" \
+--hiera_config ./hiera.yaml \
+--modulepath "dist:modules" \
+--execute "include role::$(cut -d "=" -f 2 /etc/facter/facts.d/role.txt)"
