@@ -8,7 +8,7 @@ class profile::base::moosefs() {
 		require => User["isaacelenbaas"]
 	} -> file { "/etc/systemd/system/moosefs-mount.service":
 		ensure  => "file",
-		content => @("__EOF__"/$),
+		content => @("__EOF__"),
 			[Unit]
 			Description=MooseFS mount
 			Wants=network.target
@@ -21,16 +21,15 @@ class profile::base::moosefs() {
 			RemainAfterExit=yes
 			ExecStart=bash -c '\
 			while true; do \
-			[ -f /etc/systemd/system/moosefs.service ] && \
-			while ! systemctl is-active moosefs.service; do sleep 1m; done &>/dev/null || \
+			while [ -f /etc/systemd/system/moosefs.service ] && ! systemctl is-active moosefs.service; do sleep 1m; done &>/dev/null || \
 			{ \
 			while ! systemctl is-active tailscaled.service; do sleep 1m; done &>/dev/null; \
 			while ! ping -c 1 -W 5 ${lookup("primary_server_ip")}; do sleep 1m; done &>/dev/null; \
 			}; \
 			mfsmount /media/herd -H ${lookup("primary_server_ip")} && break; \
 			sleep 1m; \
-			done\
-			'
+			done; \
+			:'
 			ExecStop=fusermount -u /media/herd
 
 			[Install]
@@ -46,8 +45,7 @@ class profile::base::moosefs() {
 			provider => "shell",
 			path     => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 		} -> file { "/etc/systemd/system/moosefs.service":
-			ensure => "absent",
-			notify => Service["moosefs-mount"]
+			ensure => "absent"
 		}
 	}
 }

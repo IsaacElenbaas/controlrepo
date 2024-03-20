@@ -10,6 +10,8 @@ hierarchy:
   # Dynamically generated based on role and attributes, allows for true data hierarchy
   # see dist/profile/lib/facter/roles.rb
   # see dist/profile/lib/puppet/functions/hiera.rb
+  - name: "Secret Data"
+    path: "secret.yaml"
   - name: "Attribute and Role Data"
     data_hash: my_hiera
     options:

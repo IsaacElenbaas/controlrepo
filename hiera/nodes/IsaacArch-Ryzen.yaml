@@ -1,4 +1,5 @@
 ---
+primary_server_ip: "127.0.0.1"
 chunkservers:
   H-hdd:
     - "wwn-0x5000c500e83a48ce"

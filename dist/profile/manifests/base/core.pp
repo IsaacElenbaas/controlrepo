@@ -28,7 +28,7 @@ class profile::base::core() {
 		path  => "/etc/sudoers",
 		line  => "%sudo   ALL=(ALL:ALL) ALL",
 		match => '^\s*#?\s*%sudo\s+ALL=(ALL:ALL)\s+ALL$'
-	} -> user { 'isaacelenbaas':
+	} -> user { "isaacelenbaas":
 		ensure     => "present",
 		groups     => ["sudo"],
 		managehome => true,
@@ -39,6 +39,7 @@ class profile::base::core() {
 		path => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 	}
 	-> service { "sshd":
-		ensure => "running"
+		ensure => "running",
+		enable => true
 	}
 }
