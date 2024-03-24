@@ -1,2 +1,4 @@
 ---
 named_conf: "primary_server/named.conf"
+
+soulseek_port: 46099

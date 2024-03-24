@@ -41,7 +41,7 @@ class profile::primary_server::node() {
 			MemoryMax=12G
 			WorkingDirectory=/media/node
 			ExecStart=node server.js
-			Restart=on-failure
+			Restart=always
 
 			[Install]
 			WantedBy=multi-user.target

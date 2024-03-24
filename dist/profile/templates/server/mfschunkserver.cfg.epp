@@ -91,7 +91,7 @@ LABELS = <%= chop(regsubst($labels, /./, "\\0,", "G")) %>
 #BIND_HOST = *
 
 # MooseFS master host, IP is allowed only in single-master installations (default is mfsmaster)
-MASTER_HOST = <%= lookup("primary_server_ip") %>
+MASTER_HOST = <% if lookup("primary_server_ip") != "127.0.0.1" { %><%= lookup("primary_server_ip") %><% } else { %><%= $facts["networking"]["interfaces"]["tailscale0"]["ip"] %><% } %>
 
 # MooseFS master command port (default is 9420)
 #MASTER_PORT = 9420

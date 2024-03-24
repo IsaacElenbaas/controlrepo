@@ -9,7 +9,7 @@ class profile::primary_server::internet() {
 
 			[Service]
 			ExecStart=cloudflared proxy-dns --port 5300
-			Restart=on-failure
+			Restart=always
 
 			[Install]
 			WantedBy=multi-user.target

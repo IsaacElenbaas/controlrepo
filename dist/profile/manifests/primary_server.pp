@@ -13,14 +13,13 @@ class profile::primary_server() {
 		before  => Class["profile::server::moosefs"]
 	}
 
-	class { "::profile::primary_server::soulseek":
-		require => Class["profile::base::soulseek"]
-	}
-
 	include ::profile::primary_server::gonic
 	include ::profile::primary_server::node
 	include ::profile::primary_server::soulseek
 
+	unless find_file("/media/arch-privoxyvpn") {
+		warning("Set up /media/arch-privoxyvpn")
+	}
 	unless find_file("/media/arch-delugevpn") {
 		warning("Set up /media/arch-delugevpn")
 	}

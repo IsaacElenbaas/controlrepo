@@ -1,4 +1,31 @@
 class profile::primary_server::soulseek() {
+	file { "/etc/systemd/system/soulseek-port.service":
+		ensure  => "file",
+		content => @("__EOF__"),
+			[Unit]
+			Description=soulseek port setup
+			Wants=network.target
+			After=network.target
+
+			[Service]
+			Type=oneshot
+			RemainAfterExit=true
+			ExecStart=bash -c '\
+			iptables -A INPUT -p tcp -d localhost --dport ${lookup("soulseek_port")} -j ACCEPT; \
+			iptables -A INPUT -p tcp              --dport ${lookup("soulseek_port")} -j DROP  ; \
+			:'
+			ExecStop=bash -c '\
+			iptables -D INPUT -p tcp -d localhost --dport ${lookup("soulseek_port")} -j ACCEPT; \
+			iptables -D INPUT -p tcp              --dport ${lookup("soulseek_port")} -j DROP  ; \
+			:'
+
+			[Install]
+			WantedBy=multi-user.target
+			|__EOF__
+	} -> service { "soulseek-port.service":
+		ensure => "running",
+		enable => true
+	}
 	file { "/etc/systemd/system/soulseek-port-tunnel.service":
 		ensure  => "file",
 		content => @("__EOF__"/$),
@@ -10,12 +37,12 @@ class profile::primary_server::soulseek() {
 			After=soulseek-port.service
 
 			[Service]
-			# no ClientAliveInterval support on current seedbox ssh :(
+			# no ClientAliveInterval support on current seedbox ssh :( use Server
 			ExecStart=bash -c '\
 			cat /home/isaacelenbaas/.ssh/id_rsa_seedbox     | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox ${lookup("seedbox_user")}@${lookup("seedbox_address")} "mkdir -p ~/.ssh && cat > ~/.ssh/id_rsa_seedbox && chmod g-r,o-r ~/.ssh/id_rsa_seedbox"; \
 			cat /home/isaacelenbaas/.ssh/id_rsa_seedbox.pub | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox ${lookup("seedbox_user")}@${lookup("seedbox_address")} "mkdir -p ~/.ssh && cat > ~/.ssh/id_rsa_seedbox.pub"; \
-			ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox -o "StrictHostKeyChecking off" -o "ServerAliveInterval 60" -T -o "ExitOnForwardFailure yes" -R 46098:localhost:46099 ${lookup("seedbox_user")}@${lookup("seedbox_address")} \
-			"ssh -i ~/.ssh/id_rsa_seedbox -g -o \\\\"StrictHostKeyChecking off\\\\" -o \\\\"ServerAliveInterval 60\\\\" -N -T -o \\\\"ExitOnForwardFailure yes\\\\" -L 46099:localhost:46098 localhost"; \
+			ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox -o "StrictHostKeyChecking off" ${lookup("seedbox_user")}@${lookup("seedbox_address")} "ssh -i ~/.ssh/id_rsa_seedbox -o \\\\"StrictHostKeyChecking off\\\\" -o \\\\"ServerAliveInterval 60\\\\" -N -f -T -o \\\\"ExitOnForwardFailure yes\\\\" -g -L ${lookup("soulseek_port")}:localhost:${lookup("soulseek_port")-1} localhost 2>/dev/null"; \
+			ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox -o "StrictHostKeyChecking off" -o "ServerAliveInterval 60" -N -T -o "ExitOnForwardFailure yes" -R ${lookup("soulseek_port")-1}:localhost:${lookup("soulseek_port")} ${lookup("seedbox_user")}@${lookup("seedbox_address")}; \
 			:'
 			Restart=always
 			# keep higher than AliveCountMax (default 3) * AliveInterval
@@ -24,7 +51,7 @@ class profile::primary_server::soulseek() {
 			|__EOF__
 	} -> file { "/etc/systemd/system/soulseek.service":
 		ensure  => "file",
-		content => @(__EOF__),
+		content => @("__EOF__"),
 			[Unit]
 			Description=soulseek server
 			Wants=network.target
@@ -35,38 +62,57 @@ class profile::primary_server::soulseek() {
 			[Service]
 			User=isaacelenbaas
 			Group=isaacelenbaas
-			ExecStart=bash -c '\
-			proxychains nicotine --headless & \
-			soulseek="\$\$!"; \
-			sleep 5m; \
-			while true; do \
-			sleep 2h; \
-			kill -0 \$\$soulseek || exit 1; \
-			proxychains nicotine --rescan; \
-			done; \
-			:'
+			Environment="SLSKD_SLSK_USERNAME=${lookup("soulseek_username")}"
+			Environment="SLSKD_SLSK_PASSWORD=${lookup("soulseek_password")}"
+			ExecStart=slskd \
+			--remote-file-management true \
+			--shared /media/soulseek \
+			--share-cache-retention 1440 \
+			--upload-slots 20 \
+			--upload-speed-limit 1830 \
+			--slsk-listen-port ${lookup("soulseek_port")} \
+			--slsk-description "" \
+			--slsk-proxy true \
+			--slsk-proxy-address 127.0.0.1 \
+			--slsk-proxy-port 9118 \
+			--slsk-proxy-username admin \
+			--slsk-proxy-password socks \
+			--http-port 8091 \
+			--no-https \
+			--no-auth \
+			--no-disk-logger \
+			--no-logo \
+			--no-config-watch \
+			--no-version-check \
+			--case-sensitive-regex
 			Restart=always
 
 			[Install]
 			WantedBy=multi-user.target
 			|__EOF__
 	}
-	unless find_file("/media/soulseek") {
-		warning("Set up /media/soulseek to have soulseek set up")
+	unless find_file("/usr/bin/slskd", "/bin/slskd") {
+		warning("Install slskd-bin to have it set up")
 	}
 	else {
-		unless find_file("/home/isaacelenbaas/.ssh/id_rsa_seedbox") {
-			warning("Set up id_rsa_seedbox to have soulseek set up")
+		unless find_file("/media/soulseek") {
+			warning("Set up /media/soulseek to have soulseek set up")
 		}
 		else {
-			unless "${lookup("seedbox_address")}" != "" and "${lookup("seedbox_user")}" != "" {
-				warning("Set up seedbox secrets to have soulseek set up")
+			unless find_file("/home/isaacelenbaas/.ssh/id_rsa_seedbox") {
+				warning("Set up id_rsa_seedbox to have soulseek set up")
 			}
 			else {
-				service { "soulseek":
-					ensure    => "running",
-					enable    => true,
-					subscribe => [File["/etc/systemd/system/soulseek.service"], Class["profile::base::proxychains"]]
+				unless "${lookup("seedbox_address")}" != "" and "${lookup("seedbox_user")}" != "" and "${lookup("soulseek_username")}" != "" and "${lookup("soulseek_password")}" != "" {
+					warning("Set up seedbox secrets to have soulseek set up")
+				}
+				else {
+					service { "soulseek":
+						ensure    => "running",
+						enable    => true,
+						require   => Service["soulseek-port.service"],
+						subscribe => File["/etc/systemd/system/soulseek.service"]
+					}
 				}
 			}
 		}

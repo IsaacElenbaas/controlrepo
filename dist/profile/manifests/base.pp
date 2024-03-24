@@ -18,8 +18,6 @@ class profile::base() {
 
 	# TODO: basic dotfiles setup, things that can't fail - e.g. ssh config
 	include ::profile::base::moosefs
-	include ::profile::base::proxychains
 	include ::profile::base::puppet
-	include ::profile::base::soulseek
 	include ::profile::base::zram
 }
