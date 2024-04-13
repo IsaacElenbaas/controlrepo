@@ -20,6 +20,7 @@ class profile::base() {
 	include ::profile::base::misc_startup
 	include ::profile::base::moosefs
 	include ::profile::base::packages
+	include ::profile::base::pipewire
 	include ::profile::base::puppet
 	include ::profile::base::zram
 }

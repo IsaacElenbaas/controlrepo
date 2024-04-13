@@ -3,6 +3,7 @@ named_conf: "base/named.conf"
 
 primary_server_ip: "100.111.227.84"
 nodes:
+  IsaacArch: "100.98.49.115"
   IsaacArch-Ryzen: "100.111.227.84"
 
 packages:
@@ -36,11 +37,6 @@ packages:
   - "opusfile" # ddnet dependency
   - "p7zip"
   - "pavucontrol"
-  - "pipewire"
-  - "pipewire-alsa"
-  - "pipewire-jack"
-  - "pipewire-pulse"
-  - "puppet"
   - "python"
   - "python-cairocffi" # launcher dependency
   - "python-pyxdg" # launcher dependency

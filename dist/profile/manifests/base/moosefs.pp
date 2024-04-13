@@ -4,8 +4,7 @@ class profile::base::moosefs() {
 	} -> file { "/media/herd":
 		ensure  => "directory",
 		owner   => "isaacelenbaas",
-		group   => "isaacelenbaas",
-		require => User["isaacelenbaas"]
+		group   => "isaacelenbaas"
 	} -> file { "/etc/systemd/system/moosefs-mount.service":
 		ensure  => "file",
 		content => @("__EOF__"),

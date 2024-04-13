@@ -32,6 +32,10 @@ class profile::base::core() {
 		ensure     => "present",
 		groups     => ["sudo"],
 		managehome => true
+	} -> file { "/home/isaacelenbaas/.config":
+		ensure  => "directory",
+		owner   => "isaacelenbaas",
+		group   => "isaacelenbaas"
 	}
 
 	package { "openssh": } -> exec { 'grep "^\S*\s\+P" <(passwd -S isaacelenbaas)':

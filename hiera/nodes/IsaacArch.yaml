@@ -1,0 +1,7 @@
+---
+chunkservers:
+  H-hdd:
+    - "wwn-0x50014ee2144383e3"
+    - "wwn-0x5000c50087e2b2ad"
+  S-ssd:
+    - "ata-TEAM_T253X6001T_TPBF2204190030205225"

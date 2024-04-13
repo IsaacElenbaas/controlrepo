@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[ -f /etc/facter/facts.d/role.txt ] || { printf "Missing role file!\n" >&2; exit 1; }
+[ -f /etc/facter/facts.d/attributes.txt ] || printf "attributes=[]\n" | sudo tee /etc/facter/facts.d/attributes.txt > /dev/null
 command -v puppet &>/dev/null || sudo pacman -S puppet r10k
 command -v r10k   &>/dev/null || sudo pacman -S r10k
 r10k puppetfile install
