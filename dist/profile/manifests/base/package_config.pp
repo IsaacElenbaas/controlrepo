@@ -68,6 +68,7 @@ class profile::base::package_config() {
 		cd ..; rm -rf yay-bin; \
 		command -v yay &>/dev/null
 		|__EOF__
-		provider => "shell"
+		provider => "shell",
+		path     => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 	}
 }

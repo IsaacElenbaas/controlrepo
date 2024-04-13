@@ -13,6 +13,7 @@ class profile::primary_server() {
 		before  => Class["profile::server::moosefs"]
 	}
 
+	include ::profile::primary_server::ddnet
 	include ::profile::primary_server::gonic
 	include ::profile::primary_server::node
 	include ::profile::primary_server::soulseek

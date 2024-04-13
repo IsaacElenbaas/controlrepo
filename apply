@@ -1,5 +1,7 @@
 #!/bin/bash
 
+command -v puppet &>/dev/null || sudo pacman -S puppet r10k
+command -v r10k   &>/dev/null || sudo pacman -S r10k
 r10k puppetfile install
 FACTER_environmentpath="$PWD" sudo --preserve-env=FACTER_environmentpath puppet apply \
 --environmentpath "$PWD" \

@@ -10,7 +10,7 @@ class profile::server::moosefs() {
 	$chunkservers = lookup("chunkservers")
 	# may not set in node def when first setting up
 	if lookup("primary_server_ip") == "127.0.0.1" or lookup("primary_server_ip") == $facts["networking"]["interfaces"]["tailscale0"]["ip"] {
-		$master = "Wants=moosefs-master.service\nAfter=moosefs-master.service\n"
+		$master = "Wants=moosefs-master.service\n"
 	}
 	else {
 		$master = ""
@@ -44,12 +44,6 @@ class profile::server::moosefs() {
 			done; \
 			:'
 			|__EOF__
-	# existing chunkservers may have been modified/removed
-	} ~> exec { "if systemctl is-active moosefs.service; then systemctl daemon-reload; systemctl restart moosefs.service; else true; fi":
-		refreshonly => true,
-		provider    => "shell",
-		subscribe   => [File["/etc/mfs/mfsmaster.cfg"], File["/etc/mfs/mfsexports.cfg"]],
-		path        => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 	} -> file { "/etc/systemd/system/moosefs.timer":
 		ensure  => "file",
 		content => @(__EOF__),
@@ -90,7 +84,9 @@ class profile::server::moosefs() {
 			Restart=on-abnormal
 			|__EOF__
 	}
-	package { ["zfs-dkms", "linux-headers"]: } ~> exec { "modprobe zfs":
+	exec { "pacman --noconfirm -S --needed linux-headers":
+		path => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
+	} -> package { "zfs-dkms": } ~> exec { "modprobe zfs":
 		refreshonly => true,
 		path        => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 	} -> service { "zfs-import-cache.service":

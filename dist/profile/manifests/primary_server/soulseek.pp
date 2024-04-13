@@ -69,7 +69,7 @@ class profile::primary_server::soulseek() {
 			--shared /media/soulseek \
 			--share-cache-retention 1440 \
 			--upload-slots 20 \
-			--upload-speed-limit 1830 \
+			--upload-speed-limit 814 \
 			--slsk-listen-port ${lookup("soulseek_port")} \
 			--slsk-description "" \
 			--slsk-proxy true \

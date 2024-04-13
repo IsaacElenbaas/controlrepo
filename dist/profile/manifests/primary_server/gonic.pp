@@ -5,7 +5,7 @@ class profile::primary_server::gonic() {
 	else {
 		file_line { "gonic_listen-addr":
 			path  => "/var/lib/gonic/config",
-			line  => "listen-addr 0.0.0.0:8096",
+			line  => "listen-addr 0.0.0.0:8097",
 			match => '^\s*#?\s*listen-addr\s'
 		} -> file_line { "gonic_music-path":
 			path  => "/var/lib/gonic/config",

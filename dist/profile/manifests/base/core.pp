@@ -31,8 +31,7 @@ class profile::base::core() {
 	} -> user { "isaacelenbaas":
 		ensure     => "present",
 		groups     => ["sudo"],
-		managehome => true,
-		shell      => "/bin/bash"
+		managehome => true
 	}
 
 	package { "openssh": } -> exec { 'grep "^\S*\s\+P" <(passwd -S isaacelenbaas)':
@@ -41,5 +40,11 @@ class profile::base::core() {
 	-> service { "sshd":
 		ensure => "running",
 		enable => true
+	}
+
+	package { "fuse2": } -> file_line { "fuse_allow_other":
+		path  => "/etc/fuse.conf",
+		line  => "user_allow_other",
+		match => '^\s*#?\s*user_allow_other$'
 	}
 }
