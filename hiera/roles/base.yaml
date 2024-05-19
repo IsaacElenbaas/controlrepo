@@ -57,6 +57,8 @@ packages:
   - "vim"
   - "w3m"
   - "wget"
+  - "wine"
+  - "winetricks"
   - "x11vnc"
   - "xbindkeys"
   - "xdotool"
