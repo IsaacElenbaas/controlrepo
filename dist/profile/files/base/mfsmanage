@@ -1,0 +1,207 @@
+#!/bin/bash
+
+mdb="/media/herd/.mlocate.db"
+if [ ! -f "$mdb" ]; then
+	if [ "$EUID" -ne 0 ]; then
+		sudo "${BASH_SOURCE[0]}" copydb "$USER"
+	else
+		dbstring="$(locate --statistics 2>&1 | grep "/" | head -n 1)"
+		dbstring="${dbstring#*/}"
+		db=""
+		while [ -n "$dbstring" ] && [ -e "$db/${dbstring%%/*}" ]; do
+			db="$db/${dbstring%%/*}"
+			dbstring="${dbstring#*/}"
+		done
+		[ -d "$db" ] && {
+			while IFS= read -r file; do
+				file="${file##*/}"
+				[ "${dbstring#"$file"}" != "$dbstring" ] && {
+					db="$db/$file"
+					break
+				}
+			done < <(find "$db" -mindepth 1 -maxdepth 1)
+		}
+		[ -f "$db" ] && cp "$db" "$mdb"
+		updatedb -o "$mdb" -U /media/herd
+		chmod 600 "$mdb"
+		[ "$1" = "copydb" ] && { chown "$2:$2" "$mdb"; exit; }
+	fi
+	[ "$1" = "updatedb" ] && exit
+fi
+[ -f "$mdb" ] || { printf "Failed to create locate db!\n" >&2; exit 1; }
+[ -r "$mdb" ] && [ -w "$mdb" ] || {
+	sudo chown "$USER:$USER" "$mdb"
+	sudo chmod 600 "$mdb"
+}
+
+goals() {
+	local -A tree
+	[ -f "/media/herd/.mfsgoal" ] || { printf "Missing root goal!\n" >&2; exit 1; }
+	while IFS= read -r -d $'\0' target; do
+		target="${target#"/media/herd"}"
+		target="${target%".mfsgoal"}"
+		current=""
+		while [ -n "$target" ]; do
+			last="$current"
+			current="$current${target%%/*}/"
+			target="${target#*/}"
+			[ -n "${tree["$current"]+1}" ] || {
+				[ -f "/media/herd$current.mfsgoal" ] && goal="$(cat "/media/herd$current.mfsgoal")" || goal="${tree["$last"]%%$'\037'*}"
+				tree["$current"]="$goal"$'\037'
+			}
+			[ -n "$target" ] && {
+				[ "${tree["$current"]#*$'\037'"$current${target%%/*}/"$'\037'}" != "${tree["$current"]}" ] || {
+					tree["$current"]="${tree["$current"]}$current${target%%/*}/"$'\037'
+				}
+			}
+		done
+	done < <(
+		[ $# -ge 1 ] || locate -d "$mdb" -e --null --regex "/media/herd/(.mfsgoal|.*/.mfsgoal)$"
+		for (( i=1; i <= $#; i++ )); do
+			find "$(realpath "${!i}")" -xdev -type f -name ".mfsgoal" -print0
+		done
+	)
+	stack="/"$'\037'
+	while [ -n "${stack::1}" ]; do
+		target="${stack%%$'\037'*}"
+		stack="${stack#*$'\037'}"
+		current="${tree["$target"]}"
+		goal="${current%%$'\037'*}"
+		if [ -z "${current#*$'\037'}" ]; then
+			printf "R%s %s\037" "$goal" "$target"
+		else
+			printf " %s %s\037" "$goal" "$target"
+			find "/media/herd$target" -xdev -mindepth 1 -maxdepth 1 \( -not -type l \) -print0 | while IFS= read -r -d $'\0' file; do
+				! mountpoint -q "$file" || continue
+				file="${file#"/media/herd"}"
+				[ "${current#*$'\037'"${file%/}/"$'\037'}" = "$current" ] && {
+					printf "R%s %s\037" "$goal" "$file"
+				}
+			done
+		fi
+		stack="$stack${current#*$'\037'}"
+	done
+}
+
+for (( i=1; i <= $#; i++ )); do
+	[ -e "${!i}" ] && {
+		target="$(realpath "${!i}")"
+		[ "${target#"/media/herd"}" != "$target" ] || { printf "%s is outside of /media/herd!\n" "${!i}" >&2; exit 1;  }
+	}
+done
+
+case "$1" in
+	"updatedb") sudo updatedb -o "$mdb" -U /media/herd ;;
+	"getgoal")
+		shift
+		{
+			[ $# -ge 1 ] || printf ".\0"
+			for (( i=1; i <= $#; i++ )); do
+				printf "${!i}\0"
+			done
+		} | while IFS= read -r -d $'\0' target; do
+			goal="???"
+			name="${target%/}"
+			{ [ -e "$target" ] && target="$(realpath "$target" 2>/dev/null)" && [ -e "$target" ]; } || { printf "%s\037does not exist" "$name"; continue; }
+			[ ! -f "$target" ] || target="${target%/*}"
+			while [ ! -f "$target/.mfsgoal" ]; do
+				target="${target%/*}"
+			done
+			[ -f "$target/.mfsgoal" ] && goal="$(cat "$target/.mfsgoal")"
+			printf "%s\037%s" "$name" "$goal"
+		done | column -s $'\037' -t
+	;;
+	"setgoal")
+		shift
+		[ $# -ge 1 ] || { printf "You must specify a goal!\n" >&2; exit 1; }
+		if [ $# -eq 1 ]; then
+			printf "$1\n" | { touch ./.mfsgoal 2>/dev/null && [ -w ./.mfsgoal ] && cat > ./.mfsgoal || sudo tee ./.mfsgoal > /dev/null; }
+		else
+			for (( i=2; i <= $#; i++ )); do
+				if [ -d "${!i}" ]; then
+					printf "$1\n" | { touch "${!i}/.mfsgoal" 2>/dev/null && [ -w "${!i}/.mfsgoal" ] && cat > "${!i}/.mfsgoal" || sudo tee "${!i}/.mfsgoal" > /dev/null; }
+				elif [ -e "${!i}" ]; then
+					mfssetsclass "$1" "${!i}" 2>/dev/null || sudo mfssetsclass "$1" "${!i}"
+				else
+					printf "%s does not exist!\n" "${!i}" >&2
+				fi
+			done
+		fi
+	;;
+	"renamegoal")
+		shift
+		[ $# -eq 2 ] || { printf "Incorrect number of arguments!\n" >&2; exit 1; }
+		[ -n "$(mfsscadmin /media/herd list | grep "^$1$")" ] || { printf "Goal '%s' does not exist!\n" "$1" >&2; exit 1; }
+		[ -z "$(mfsscadmin /media/herd list | grep "^$2$")" ] || { printf "Goal '%s' already exists!\n" "$2" >&2; exit 1; }
+		if [ "$EUID" -ne 0 ]; then
+			sudo "${BASH_SOURCE[0]}" renamegoal "$@"
+		else
+			mfsscadmin /media/herd rename "$1" "$2"
+			find /media/herd -xdev -type f -name ".mfsgoal" -print0 | while IFS= read -r -d $'\0' file; do
+				[ "$(cat "$file")" != "$1" ] || printf "$2\n" > "$file"
+			done
+		fi
+	;;
+	"updategoals") ;&
+	"applygoals")
+		shift
+		if [ "$EUID" -ne 0 ]; then
+			sudo "${BASH_SOURCE[0]}" applygoals "$@"
+		else
+			goals "$@" | while IFS= read -r -d $'\037' target; do
+				[ "${target::1}" = "R" ] && r="-r" || r=""
+				target="${target:1}"
+				goal="${target%%[[:space:]]*}"
+				mfssetsclass $r "$goal" "/media/herd${target#*[[:space:]]}"
+			done
+		fi
+	;;
+	"getstats")
+		shift
+		if [ "$EUID" -ne 0 ]; then
+			sudo "${BASH_SOURCE[0]}" getstats "$@"
+		else
+			declare -A stats
+			while IFS= read -r -d $'\0' target; do
+				goal="${target%%[[:space:]]*}"; goal="${goal#R}"
+				target="${target#*[[:space:]]}"
+				size="$(du -bsx -- "/media/herd$target")"; size="${size%%[[:space:]]*}"
+				stats["$goal"]="${stats["$goal"]-}$size $target"$'\037'
+			done < <(goals "$@" | tr '\037' '\0' | grep -zZ "^R")
+			for goal in "${!stats[@]}"; do
+				printf "%s\037" "$goal"
+				printf "%s" "${stats["$goal"]}"
+			done | gzip -c > /media/herd/.mfsstats.gz
+			chmod 644 /media/herd/.mfsstats.gz
+			"${BASH_SOURCE[0]}" printstats
+		fi
+	;;
+	"printstats")
+		[ -f "/media/herd/.mfsstats.gz" ] || { printf "Run getstats first!\n" >&2; exit 1; }
+		declare -A totals
+		while IFS= read -r -d $'\037' line; do
+			[ "${line#*[[:space:]]}" != "$line" ] || { goal="$line"; continue; }
+			totals["$goal"]=$((${totals["$goal"]-0}+${line%%[[:space:]]*}))
+		done < <(cat /media/herd/.mfsstats.gz | gzip -d -c)
+		for goal in "${!totals[@]}"; do
+			printf "%s\037%dGiB\n" "$goal" "$(((${totals["$goal"]}+(1024*1024*1024)/2)/(1024*1024*1024)))"
+		done | column -s $'\037' -t
+	;;
+	"printcontributors")
+		shift
+		[ -f "/media/herd/.mfsstats.gz" ] || { printf "Run getstats first!\n" >&2; exit 1; }
+		[ $# -eq 2 ] || { printf "Supply a goal and a minimum size in GiB!\n" >&2; exit 1; }
+		min=$(($2*1024*1024*1024))
+		while IFS= read -r -d $'\037' line; do
+			[ "${line#*[[:space:]]}" != "$line" ] || { goal="$line"; continue; }
+			[ "$goal" = "$1" ] || continue
+			[ ${line%%[[:space:]]*} -ge $min ] || continue
+			printf "%dGiB\037%s\n" "$(((${line%%[[:space:]]*}+(1024*1024*1024)/2)/(1024*1024*1024)))" "${line#*[[:space:]]}"
+		done < <(cat /media/herd/.mfsstats.gz | gzip -d -c) | sort -rn | column -s $'\037' -t
+	;;
+	*)
+		[ $# -ge 1 ] || { printf "No command provided!\n" >&2; exit 1; }
+		printf "%s command does not exist!\n" "$1" >&2
+		exit 1
+	;;
+esac

@@ -47,4 +47,10 @@ class profile::base::moosefs() {
 			ensure => "absent"
 		}
 	}
+
+	file { "/sbin/mfsmanage":
+		ensure => "file",
+		source => "puppet:///modules/${module_name}/base/mfsmanage",
+		mode   => "0755"
+	}
 }

@@ -8,7 +8,7 @@ class profile::primary_server::internet() {
 			After=network.target
 
 			[Service]
-			ExecStart=cloudflared proxy-dns --port 5300
+			ExecStart=cloudflared proxy-dns --port 5300 --upstream "https://9.9.9.9/dns-query"
 			Restart=always
 
 			[Install]

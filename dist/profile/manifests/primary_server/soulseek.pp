@@ -41,7 +41,7 @@ class profile::primary_server::soulseek() {
 			ExecStart=bash -c '\
 			cat /home/isaacelenbaas/.ssh/id_rsa_seedbox     | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox ${lookup("seedbox_user")}@${lookup("seedbox_address")} "mkdir -p ~/.ssh && cat > ~/.ssh/id_rsa_seedbox && chmod g-r,o-r ~/.ssh/id_rsa_seedbox"; \
 			cat /home/isaacelenbaas/.ssh/id_rsa_seedbox.pub | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox ${lookup("seedbox_user")}@${lookup("seedbox_address")} "mkdir -p ~/.ssh && cat > ~/.ssh/id_rsa_seedbox.pub"; \
-			while printf "\\\\n"; do sleep 60; done | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox -o "StrictHostKeyChecking off" -o "ExitOnForwardFailure yes" -tt -R ${lookup("soulseek_port")-1}:localhost:${lookup("soulseek_port")} ${lookup("seedbox_user")}@${lookup("seedbox_address")} "ssh -i ~/.ssh/id_rsa_seedbox -o \\\\"StrictHostKeyChecking off\\\\" -o \\\\"ServerAliveInterval 60\\\\" -o \\\\"ExitOnForwardFailure yes\\\\" -N -T -g -L ${lookup("soulseek_port")}:localhost:${lookup("soulseek_port")-1} localhost & while IFS= read -r -t 65; do :; done; kill \\\\$!"; \
+			while printf "\\\\n"; do sleep 60; done | ssh -i /home/isaacelenbaas/.ssh/id_rsa_seedbox -o "StrictHostKeyChecking off" -o "ExitOnForwardFailure yes" -tt -R ${lookup("soulseek_port")-1}:localhost:${lookup("soulseek_port")} ${lookup("seedbox_user")}@${lookup("seedbox_address")} "ssh -i ~/.ssh/id_rsa_seedbox -o \\\\"StrictHostKeyChecking off\\\\" -o \\\\"ServerAliveInterval 60\\\\" -o \\\\"ExitOnForwardFailure yes\\\\" -N -T -g -L ${lookup("soulseek_port")}:localhost:${lookup("soulseek_port")-1} localhost & while IFS= read -rs -t 65; do :; done; kill \\\\$!"; \
 			:'
 			Restart=always
 			# keep higher than 65s + AliveCountMax (default 3) * AliveInterval to be safe

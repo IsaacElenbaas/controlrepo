@@ -58,6 +58,7 @@ packages:
   - "w3m"
   - "wget"
   - "wine"
+  - "wine-mono"
   - "winetricks"
   - "x11vnc"
   - "xbindkeys"
