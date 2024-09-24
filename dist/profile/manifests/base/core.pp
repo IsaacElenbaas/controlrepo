@@ -40,8 +40,7 @@ class profile::base::core() {
 
 	package { "openssh": } -> exec { 'grep "^\S*\s\+P" <(passwd -S isaacelenbaas)':
 		path => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
-	}
-	-> service { "sshd":
+	} -> service { "sshd":
 		ensure => "running",
 		enable => true
 	}

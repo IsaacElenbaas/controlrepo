@@ -1,10 +1,16 @@
 ---
 named_conf: "base/named.conf"
 
-primary_server_ip: "100.111.227.84"
+primary_server_ip: "100.97.238.6"
 nodes:
-  IsaacArch: "100.98.49.115"
-  IsaacArch-Ryzen: "100.111.227.84"
+  IsaacArch: "100.65.207.28"
+  IsaacArch-Ryzen: "100.97.238.6"
+
+shared_moosefs:
+  Tom:
+    - "100.0.0.0"
+  Levi:
+    - "100.0.0.0"
 
 packages:
   - "base-devel"
@@ -44,6 +50,7 @@ packages:
   - "qpwgraph"
   - "quodlibet"
   - "rclone"
+  - "restic"
   - "rsync"
   - "screen"
   - "steam"
@@ -83,3 +90,5 @@ packages_aur:
   - "mp3gain"
   - "osu-lazer-bin"
   - "qdirstat"
+  - "roomeqwizard"
+  - "wayback_machine_downloader"

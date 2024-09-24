@@ -1,6 +1,13 @@
 # Allow everything but "meta".
 127.0.0.0/8			/	rw,alldirs,admin,mingoal=1,maproot=0:0
-100.0.0.0/8			/	rw,alldirs,admin,mingoal=1,maproot=0:0
+<% lookup("nodes").each |$name, $address| { -%>
+<%= $address %>/0			/	rw,alldirs,admin,mingoal=1,maproot=0:0
+<% } -%>
+<% lookup("shared_moosefs").each |$name, $addresses| { -%>
+	<%- $addresses.each |$address| { -%>
+<%= $address %>/0			/Shared/<%= $name %>	rw,alldirs,maproot=0:0,mapall=1000:1000
+	<%- } -%>
+<% } -%>
 10.0.0.0/24			/	rw,alldirs,admin,mingoal=1,maproot=0:0
 192.168.0.0/24			/	rw,alldirs,admin,mingoal=1,maproot=0:0
 

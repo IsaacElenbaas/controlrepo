@@ -40,6 +40,10 @@ class profile::primary_server::node() {
 			# RW RWBG is 2.6G per if memory sharing breaks
 			MemoryMax=12G
 			WorkingDirectory=/media/node
+			ExecStartPre=+cp -f /etc/letsencrypt/live/isaacelenbaas.com/fullchain.pem /media/node/cert.crt
+			ExecStartPre=+cp -f /etc/letsencrypt/live/isaacelenbaas.com/privkey.pem /media/node/key.pem
+			ExecStartPre=+chown isaacelenbaas:isaacelenbaas /media/node/cert.crt /media/node/key.pem
+			ExecStartPre=+chmod 644 /media/node/cert.crt /media/node/key.pem
 			ExecStart=node server.js
 			Restart=always
 

@@ -13,10 +13,11 @@ class profile::primary_server::moosefs() {
 		mode   => "0600"
 	}
 	file { "/etc/mfs/mfsexports.cfg":
-		ensure => "file",
-		source => "puppet:///modules/${module_name}/primary_server/mfsexports.cfg",
-		owner  => "mfs",
-		group  => "mfs"
+		ensure  => "file",
+		content => epp("${module_name}/primary_server/mfsexports.cfg.epp"),
+		owner   => "mfs",
+		group   => "mfs",
+		before  => File["/etc/systemd/system/moosefs.service"]
 	}
 	exec { "if systemctl is-active moosefs-master; then systemctl restart moosefs-master; else true; fi":
 		refreshonly => true,

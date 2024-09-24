@@ -1,0 +1,13 @@
+#!/bin/bash
+
+docker="/media/herd/NoBack/Docker"
+
+docker_restart() {
+	[ -n "$(docker ps -q -f "name=$1")" ] && docker restart "$1"
+}
+
+systemctl restart node.service
+prosodyctl --root cert import /etc/letsencrypt/live
+cp -fp /media/node/{cert.crt,key.pem} "$docker/screego/docker-config/" 2>/dev/null
+docker_restart screego
+true
