@@ -16,6 +16,7 @@ packages:
   - "base-devel"
   - "bluez"
   - "bluez-utils"
+  - "castget"
   - "chromium"
   - "cmake"
   - "dotnet-runtime"
@@ -24,6 +25,7 @@ packages:
   - "dotnet-sdk-6.0"
   - "dzen2"
   - "firefox"
+  - "gajim"
   - "gdb"
   - "git"
   - "glew"
@@ -37,6 +39,7 @@ packages:
   - "man-pages"
   - "mariadb-libs" # ddnet dependency
   - "miniupnpc" # ddnet dependency
+  - "monolith"
   - "mpv"
   - "nicotine+"
   - "obs-studio"
