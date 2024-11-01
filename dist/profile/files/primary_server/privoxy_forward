@@ -1,0 +1,26 @@
+#!/bin/bash
+
+[ $EUID -eq 0 ] || { sudo "${BASH_SOURCE[0]}"; exit $?; }
+privateproxy_api_key="$(cd /media/controlrepo && ./lookup --render-as s privateproxy_api_key)"
+[ -n "$privateproxy_api_key" ] || exit 1
+while ! ping -c 1 -W 5 app.privateproxy.me &>/dev/null; do sleep 1m; done
+id="$(curl -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions 2>/dev/null)"
+[ "${id#*[\"\']id[\"\']}" != "$id" ] || exit 1
+id="${id#*[\"\']id[\"\']}"; id="${id#*:}"; id="${id#${id%%[^[:space:]]*}}"; id="${id%%[,\}]*}"
+proxies="$(curl -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions/$id/ips 2>/dev/null)"
+[ -n "$proxies" ] || exit 1
+count="${proxies//[^$'\n']/}"$'\n'; count="${#count}"
+index=$(((($(date +'%s')/(60*60*24*7))%$count)+1))
+proxy_raw="$(head -n $index <<< "$proxies" | tail -n 1)"
+proxy="${proxy_raw##*:}"; proxy_raw="${proxy_raw%:*}"
+proxy="${proxy_raw##*:}:$proxy"; proxy_raw="${proxy_raw%:*}"
+proxy="$proxy@$proxy_raw"
+last="$(head -n 1 /etc/privoxy/config)"
+[ "$last" = "forward-socks5 / $proxy ." ] || {
+	{
+		printf "%s\n" "forward-socks5 / $proxy ."
+		cat /etc/privoxy/config | { [ "${last#*forward-socks5}" = "$last" ] || IFS= read -r; cat; }
+	} > /etc/privoxy/config.new
+	mv -f /etc/privoxy/config.new /etc/privoxy/config
+	systemctl restart privoxy
+}

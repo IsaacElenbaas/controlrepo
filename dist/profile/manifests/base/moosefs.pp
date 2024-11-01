@@ -38,6 +38,20 @@ class profile::base::moosefs() {
 		ensure  => "running",
 		enable  => true,
 		require => Class["profile::base::tailscale"]
+	} -> file { "/etc/systemd/system/moosefs-mount-wait.service":
+		ensure  => "file",
+		content => @("__EOF__"),
+			[Unit]
+			Description=Wait for MooseFS mount
+			Wants=moosefs-mount.service
+			After=moosefs-mount.service
+
+			[Service]
+			Type=oneshot
+			TimeoutStartSec=0
+			RemainAfterExit=yes
+			ExecStart=bash -c 'while ! mountpoint /media/herd &>/dev/null; do sleep 10; done'
+			|__EOF__
 	}
 	unless "server" in $facts["roles"] {
 		exec { "if [ -f /etc/systemd/system/moosefs.service ]; then systemctl disable --now moosefs.service; else true; fi":

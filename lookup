@@ -1,0 +1,11 @@
+#!/bin/bash
+
+[ $UID -eq 0 ] || [ -e ~/.facter/facts.d ] || {
+	mkdir -p ~/.facter
+	ln -s /etc/facter/facts.d ~/.facter
+}
+FACTER_environmentpath="$PWD" puppet lookup \
+--environmentpath "$PWD" \
+--hiera_config ./hiera.yaml \
+--modulepath "dist:modules" \
+"$@"

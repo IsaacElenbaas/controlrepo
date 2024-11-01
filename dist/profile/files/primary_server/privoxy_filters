@@ -1,0 +1,17 @@
+SERVER-HEADER-FILTER: default-src-header
+s`^(Content-Security-Policy(?=:).*)[^a-zA-Z-]default-src\s[^;]*;?`$1`ig
+
+FILTER: font-enforce
+s`font-family:\s*(?:(?:(?:(?=\S)[^'",;]+|'[^']*'|"[^"]*")\s*,\s*)*(?:(?=\S)[^'",;]+|'[^']*'|"[^"]*")\s*?(?:!important)?\s*?;?|(?=\S)[^'";].*?(?=['"]))``ig
+
+SERVER-HEADER-FILTER: font-src-header
+s`^(Content-Security-Policy(?=:).*[^a-zA-Z-]font-src\s[^;]*)(;?)`$1 https://isaacelenbaas.com https://*.isaacelenbaas.com$2`ig
+
+FILTER: font-add
+s`((?:<head|<body|<style|<script|</html)(?:>|\s))`<style> \
+@font-face { \
+	font-family: "my-font"; \
+	src: URL("https://isaacelenbaas.com/fonts/active.ttf") format("truetype"); \
+} \
+* { font-family: "my-font" !important; } \
+</style>$1`i

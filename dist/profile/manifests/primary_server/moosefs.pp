@@ -73,4 +73,15 @@ class profile::primary_server::moosefs() {
 		enable  => true,
 		require => Class["profile::base::tailscale"]
 	}
+
+	file { "/etc/systemd/system/docker.service.d":
+		ensure => "directory"
+	} -> file { "/etc/systemd/system/docker.service.d/override.conf":
+		ensure  => "file",
+		content => @(__EOF__),
+			[Unit]
+			Requires=moosefs-mount-wait.service
+			|__EOF__
+		require => File["/etc/systemd/system/moosefs-mount-wait.service"]
+	} -> service { "docker.socket": enable => false }
 }

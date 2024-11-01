@@ -17,6 +17,7 @@ class profile::primary_server() {
 	include ::profile::primary_server::gonic
 	include ::profile::primary_server::letsencrypt
 	include ::profile::primary_server::node
+	include ::profile::primary_server::proxy
 	include ::profile::primary_server::soulseek
 	include ::profile::primary_server::xmpp
 

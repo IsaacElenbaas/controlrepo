@@ -1,0 +1,20 @@
+{ +prevent-compression +https-inspection +change-x-forwarded-for{block} +hide-referrer{forge} +filter{webbugs} +deanimate-gifs{first} }
+/
+
+{ +filter{font-enforce} +filter{font-add} +server-header-filter{default-src-header} +server-header-filter{font-src-header} }
+/
+{ -filter{font-enforce} -filter{font-add} }
+/.*/[^?]*\.[^/]*$
+{ +filter{font-enforce} +filter{font-add} }
+/.*/[^?]*\.html(\?[^/]*)?$
+{ -filter{font-enforce} -filter{font-add} }
+/.*(api|json|xml)
+
+# I am too lazy to generate a trusted CA certs file with mine added
+{ +ignore-certificate-errors }
+isaacelenbaas.com/
+*.isaacelenbaas.com/
+
+{ +set-image-blocker{pattern} }
+archiveofourown.org/
+.archiveofourown.org/

@@ -22,7 +22,10 @@ class profile::primary_server::internet() {
 	# stop base internet manifest from running if pihole has not been manually set up yet
 	# this manifest is marked as before it in primary_server.pp
 	package { "docker": }
-	-> exec { "grep pihole <(docker ps 2>&1)":
+	-> service { "docker.service":
+		ensure => "running",
+		enable => true
+	} -> exec { "grep pihole <(docker ps 2>&1)":
 		path => "/usr/local/sbin:/usr/sbin:/usr/local/bin:/usr/bin"
 	}
 }
