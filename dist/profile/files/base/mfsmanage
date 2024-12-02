@@ -1,27 +1,10 @@
 #!/bin/bash
 
 mdb="/media/herd/.mlocate.db"
-if [ ! -f "$mdb" ]; then
+if [ ! -f "$mdb" ] || [ "$1" = "updatedb" ] || [ "$1" = "copydb" ]; then
 	if [ "$EUID" -ne 0 ]; then
 		sudo "${BASH_SOURCE[0]}" copydb "$USER"
 	else
-		dbstring="$(locate --statistics 2>&1 | grep "/" | head -n 1)"
-		dbstring="${dbstring#*/}"
-		db=""
-		while [ -n "$dbstring" ] && [ -e "$db/${dbstring%%/*}" ]; do
-			db="$db/${dbstring%%/*}"
-			dbstring="${dbstring#*/}"
-		done
-		[ -d "$db" ] && {
-			while IFS= read -r file; do
-				file="${file##*/}"
-				[ "${dbstring#"$file"}" != "$dbstring" ] && {
-					db="$db/$file"
-					break
-				}
-			done < <(find "$db" -mindepth 1 -maxdepth 1)
-		}
-		[ -f "$db" ] && cp "$db" "$mdb"
 		updatedb -o "$mdb" -U /media/herd
 		chmod 600 "$mdb"
 		[ "$1" = "copydb" ] && { chown "$2:$2" "$mdb"; exit; }

@@ -2,3 +2,14 @@
 named_conf: "primary_server/named.conf"
 
 soulseek_port: 46099
+
+shared_moosefs:
+  Tom:
+    - "100.0.0.0"
+  Levi:
+    - "100.115.162.21"
+  Cosand:
+    - "100.73.121.46"
+
+packages_aur:
+  - "go-sendxmpp-git"

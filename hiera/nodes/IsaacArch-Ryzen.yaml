@@ -1,5 +1,5 @@
 ---
-primary_server_ip: "127.0.0.1"
+primary_server_ip: ["127.0.0.1", "127.0.0.1"]
 chunkservers:
   H-hdd:
     - "wwn-0x5000c500e83a48ce"
@@ -8,5 +8,5 @@ chunkservers:
   S-ssd:
     - "ata-TEAM_T2532TB_TPBF2302100040401349"
     - "ata-TEAM_T2534TB_TPBF2401110050500510"
-    - "*ata-TEAM_T2534TB_TPBF2401110050501301"
+    - "ata-TEAM_T2534TB_TPBF2401110050501301"
     - "nvme-WD_Green_SN350_2TB_23435F800484-part3"

@@ -18,7 +18,6 @@ class profile::primary_server::ddnet() {
 			WantedBy=multi-user.target
 			|__EOF__
 	} -> service { "ddnet":
-		ensure => "running",
 		enable => true
 	}
 }

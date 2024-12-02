@@ -49,9 +49,9 @@ class profile::primary_server::moosefs() {
 			while [ -f /etc/systemd/system/moosefs.service ] && ! systemctl is-active moosefs.service; do sleep 1m; done &>/dev/null || \
 			{ \
 			while ! systemctl is-active tailscaled.service; do sleep 1m; done &>/dev/null; \
-			while ! ping -c 1 -W 5 ${lookup("primary_server_ip")}; do sleep 1m; done &>/dev/null; \
+			while ! ping -c 1 -W 5 ${lookup("primary_server_ip")[0]}; do sleep 1m; done &>/dev/null; \
 			}; \
-			mfsmount /media/torrents -H ${lookup("primary_server_ip")} \
+			mfsmount /media/torrents -H ${lookup("primary_server_ip")[0]} \
 			-o mfspreflabels=S \
 			-o mfssubfolder=/Torrents \
 			-o mfscachemode=YES \
@@ -69,19 +69,22 @@ class profile::primary_server::moosefs() {
 			WantedBy=multi-user.target
 			|__EOF__
 	} ~> service { "moosefs-torrents-mount":
-		ensure  => "running",
 		enable  => true,
 		require => Class["profile::base::tailscale"]
 	}
 
-	file { "/etc/systemd/system/docker.service.d":
-		ensure => "directory"
-	} -> file { "/etc/systemd/system/docker.service.d/override.conf":
-		ensure  => "file",
-		content => @(__EOF__),
-			[Unit]
-			Requires=moosefs-mount-wait.service
-			|__EOF__
-		require => File["/etc/systemd/system/moosefs-mount-wait.service"]
-	} -> service { "docker.socket": enable => false }
+	["ddnet", "docker", "gonic", "jellyfin", "node", "soulseek"].each |String $service| {
+		file { "/etc/systemd/system/${service}.service.d":
+			ensure => "directory"
+		} -> file { "/etc/systemd/system/${service}.service.d/override.conf":
+			ensure  => "file",
+			content => @(__EOF__),
+				[Unit]
+				Requires=moosefs-mount-wait.service
+				After=moosefs-mount-wait.service
+				|__EOF__
+			require => File["/etc/systemd/system/moosefs-mount-wait.service"]
+		}
+	}
+	service { "docker.socket": enable => false }
 }

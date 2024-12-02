@@ -24,7 +24,6 @@ class profile::primary_server::gonic() {
 			line  => "scan-interval 60",
 			match => '^\s*#?\s*scan-interval\s'
 		} ~> service { "gonic":
-			ensure => "running",
 			enable => true
 		}
 	}

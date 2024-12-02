@@ -8,7 +8,12 @@ class profile::server::tty1() {
 			if [ "$(tty)" = "/dev/tty1" ]; then
 				source /etc/profile
 				source ~/.profile
-				exec startx
+				[ $(cat /proc/uptime | cut -d "." -f 1 | cut -d " " -f 1) -lt 60 ] && rm -f "/home/$USER/.gpu-passthrough"
+				while true; do
+					while [ -f "/home/$USER/.gpu-passthrough" ]; do sleep 10; done
+					startx
+					sleep 10
+				done
 			else
 				exec /bin/bash "$@"
 			fi

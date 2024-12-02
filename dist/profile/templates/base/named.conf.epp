@@ -6,8 +6,8 @@ options {
 
     forward only;
     dnssec-validation no;
-    forwarders { <%= lookup("primary_server_ip") %>; };
-    //forwarders { 1.1.1.1; 1.1.0.0; };
+    forwarders { <%= lookup("primary_server_ip")[0] %>; };
+    //forwarders { 9.9.9.9; 149.112.112.112; };
 
     allow-recursion { 127.0.0.1; };
     allow-transfer { none; };
@@ -34,10 +34,10 @@ zone "1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa" 
 
 zone "tailscale.com" IN {
     type forward;
-    forwarders { 1.1.1.1; 1.1.0.0; };
+    forwarders { 9.9.9.9; 149.112.112.112; };
 };
 
 zone "cloudflare.com" IN {
     type forward;
-    forwarders { 1.1.1.1; 1.1.0.0; };
+    forwarders { 9.9.9.9; 149.112.112.112; };
 };

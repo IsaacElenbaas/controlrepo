@@ -18,13 +18,7 @@ class profile::primary_server::soulseek() {
 			iptables -D INPUT -p tcp -d localhost --dport ${lookup("soulseek_port")} -j ACCEPT; \
 			iptables -D INPUT -p tcp              --dport ${lookup("soulseek_port")} -j DROP  ; \
 			:'
-
-			[Install]
-			WantedBy=multi-user.target
 			|__EOF__
-	} -> service { "soulseek-port.service":
-		ensure => "running",
-		enable => true
 	}
 	file { "/etc/systemd/system/soulseek-port-tunnel.service":
 		ensure  => "file",
@@ -107,9 +101,7 @@ class profile::primary_server::soulseek() {
 				}
 				else {
 					service { "soulseek":
-						ensure    => "running",
 						enable    => true,
-						require   => Service["soulseek-port.service"],
 						subscribe => File["/etc/systemd/system/soulseek.service"]
 					}
 				}

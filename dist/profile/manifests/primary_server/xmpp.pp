@@ -3,7 +3,6 @@ class profile::primary_server::xmpp() {
 		ensure  => "file",
 		source  => "puppet:///modules/${module_name}/primary_server/prosody.cfg.lua"
 	} ~> service { "prosody":
-		ensure => "running",
 		enable => true
 	}
 }

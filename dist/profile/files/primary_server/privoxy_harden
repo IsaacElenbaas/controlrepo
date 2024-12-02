@@ -1,0 +1,28 @@
+#!/bin/bash
+
+[ $EUID -eq 0 ] || { sudo "${BASH_SOURCE[0]}"; exit $?; }
+
+{
+	printf "%s\n" "CLIENT-HEADER-FILTER: accept-headers"
+	# quality value is restricted to three decimal digits
+	printf "%s\n" "s\`^(Accept:[^;]*;q=0\\.[0-9])[0-9]*\`\$1\\$(($RANDOM%100))\`i"
+	printf "%s\n" "s\`^(Accept:.*\\*/\\*;q=0\\.[0-9])[0-9]*\`\$1\\$(($RANDOM%100))\`i"
+	printf "%s\n" "s\`^(Accept-Language:\\s*).*\`\$1en-US\`i"
+} > "/etc/privoxy/harden.filter"
+
+{
+	printf "%s\n/\n" "{+client-header-filter{accept-headers}}"
+	curl -fsSL "https://github.com/microlinkhq/top-user-agents/raw/refs/heads/master/src/desktop.json" | tr -d "[]" | {
+		REPLY=; while [ "$REPLY" != "\"" ]; do IFS= read -r -N 1 || break; done
+		IFS= read -r line && while true; do
+			printf "%s\n" "${line%%\"*}"
+			line="${line#*\"}"
+			[ "${line#*\"}" != "$line" ] && { line="${line#*\"}"; continue; } || {
+				REPLY=; while [ "$REPLY" != "\"" ]; do IFS= read -r -N 1 || break; done
+				IFS= read -r line || break
+			}
+		done
+	} | grep -i "[^[:alpha:]]windows[^[:alpha:]]" | grep -v -e "linux" -e "macintosh" | grep -i "[^[:alpha:]]chrome[^[:alpha:]]" | head -n 1 | { IFS= read -r user_agent && printf "%s\n/\n" "{ +hide-user-agent{$user_agent} }"
+	}
+} > "/etc/privoxy/harden.action"
+systemctl restart privoxy

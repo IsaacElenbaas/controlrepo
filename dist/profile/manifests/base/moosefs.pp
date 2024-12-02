@@ -23,9 +23,9 @@ class profile::base::moosefs() {
 			while [ -f /etc/systemd/system/moosefs.service ] && ! systemctl is-active moosefs.service; do sleep 1m; done &>/dev/null || \
 			{ \
 			while ! systemctl is-active tailscaled.service; do sleep 1m; done &>/dev/null; \
-			while ! ping -c 1 -W 5 ${lookup("primary_server_ip")}; do sleep 1m; done &>/dev/null; \
+			while ! ping -c 1 -W 5 ${lookup("primary_server_ip")[0]}; do sleep 1m; done &>/dev/null; \
 			}; \
-			mfsmount /media/herd -H ${lookup("primary_server_ip")} && break; \
+			mfsmount /media/herd -H ${lookup("primary_server_ip")[0]} && break; \
 			sleep 1m; \
 			done; \
 			:'
@@ -34,8 +34,7 @@ class profile::base::moosefs() {
 			[Install]
 			WantedBy=multi-user.target
 			|__EOF__
-	} ~> service { "moosefs-mount":
-		ensure  => "running",
+	} -> service { "moosefs-mount":
 		enable  => true,
 		require => Class["profile::base::tailscale"]
 	} -> file { "/etc/systemd/system/moosefs-mount-wait.service":

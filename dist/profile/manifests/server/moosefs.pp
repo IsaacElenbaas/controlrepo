@@ -9,7 +9,7 @@ class profile::server::moosefs() {
 
 	$chunkservers = lookup("chunkservers")
 	# may not set in node def when first setting up
-	if lookup("primary_server_ip") == "127.0.0.1" or lookup("primary_server_ip") == $facts["networking"]["interfaces"]["tailscale0"]["ip"] {
+	if lookup("primary_server_ip")[0] == "127.0.0.1" or lookup("primary_server_ip")[1] == $facts["networking"]["interfaces"]["tailscale0"]["ip"] {
 		$master = "Wants=moosefs-master.service\n"
 	}
 	else {
@@ -28,8 +28,6 @@ class profile::server::moosefs() {
 			TimeoutStopSec=0
 			ExecStart=true
 			ExecStop=bash -c '\
-			systemctl stop moosefs-torrents-mount 2>/dev/null || true; \
-			systemctl stop moosefs-mount; \
 			systemctl stop moosefs-master; \
 			IFS= read -r services < <(systemctl list-units -t service -o json --no-pager | tr -d " \\t\\n"); \
 			services="\$services.unit.:"; \
@@ -37,6 +35,7 @@ class profile::server::moosefs() {
 			services="\$\${services#*[[:punct:]]unit[[:punct:]]:}"; \
 			service="\$\${services%%%%[[:punct:]]unit[[:punct:]]:*}"; \
 			[ "\$\${service#*moosefs-}" != "\$service" ] || continue; \
+			[ "\$\${service#*mount}" = "\$service" ] || continue; \
 			[ "\$\${service::1}" = "m" ] && service="\$\${service%%%%,*}" || { \
 			quote="\$\${service::1}"; service="\$\${service:1}"; service="\$\${service%%%%\$quote*}"; \
 			}; \

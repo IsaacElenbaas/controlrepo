@@ -4,10 +4,10 @@
 privateproxy_api_key="$(cd /media/controlrepo && ./lookup --render-as s privateproxy_api_key)"
 [ -n "$privateproxy_api_key" ] || exit 1
 while ! ping -c 1 -W 5 app.privateproxy.me &>/dev/null; do sleep 1m; done
-id="$(curl -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions 2>/dev/null)"
+id="$(curl -fsSL -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions)"
 [ "${id#*[\"\']id[\"\']}" != "$id" ] || exit 1
 id="${id#*[\"\']id[\"\']}"; id="${id#*:}"; id="${id#${id%%[^[:space:]]*}}"; id="${id%%[,\}]*}"
-proxies="$(curl -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions/$id/ips 2>/dev/null)"
+proxies="$(curl -fsSL -u api:$privateproxy_api_key https://app.privateproxy.me/api/v1/package_subscriptions/$id/ips)"
 [ -n "$proxies" ] || exit 1
 count="${proxies//[^$'\n']/}"$'\n'; count="${#count}"
 index=$(((($(date +'%s')/(60*60*24*7))%$count)+1))

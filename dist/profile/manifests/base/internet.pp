@@ -3,7 +3,8 @@ class profile::base::internet() {
 		path  => "/etc/dhcpcd.conf",
 		line  => "nohook resolv.conf",
 		match => '^\s*#?\s*nohook resolv.conf$'
-	} ~> service { "dhcpcd":
+	}
+	service { "systemd-networkd":
 		ensure => "running",
 		enable => true
 	}

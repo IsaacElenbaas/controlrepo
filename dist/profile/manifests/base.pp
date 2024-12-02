@@ -17,6 +17,7 @@ class profile::base() {
 	}
 
 	# TODO: basic dotfiles setup, things that can't fail - e.g. ssh config
+	include ::profile::base::locate
 	include ::profile::base::misc_startup
 	include ::profile::base::moosefs
 	include ::profile::base::packages
